@@ -147,6 +147,29 @@ const config = {
         'user-logs',
         'profile-logs'
       ]
+    },
+    staffPing: {
+      id: process.env.STAFF_PING_CHANNEL_ID || process.env.PING_CHANNEL_ID || null,
+      names: [
+        process.env.STAFF_PING_CHANNEL || process.env.PING_CHANNEL || '! · PING',
+        '! · PING',
+        'ping',
+        'pings',
+        'staff-ping',
+        'support-ping',
+        'ping-logs',
+        'staff-pings'
+      ]
+    },
+    supportWaiting: {
+      id: process.env.SUPPORT_WAITING_CHANNEL_ID || null,
+      names: [
+        process.env.SUPPORT_WAITING_CHANNEL || 'support waiting',
+        'support waiting',
+        'support-waiting',
+        'support waiting room',
+        '🔒|| support waiting'
+      ]
     }
   },
 
@@ -163,7 +186,8 @@ const config = {
     voiceLog: 0x2ECC71,  // Voice log accent
     soundboardLog: 0x9B59B6, // Soundboard log accent
     deletedMessageLog: 0xED4245, // Deleted message log accent
-    accountLog: 0x3498DB // Account log accent
+    accountLog: 0x3498DB, // Account log accent
+    supportWaitingAlert: 0xFEE75C // Support waiting amber alert
   }
 };
 

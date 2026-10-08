@@ -287,6 +287,14 @@ module.exports = {
       } else {
         logger.info(`[${guild.name}] Join-to-Create voice channel notice: Create a voice channel named "➕ Create Voice" to enable automatic temp voice rooms.`);
       }
+
+      // 7. Check for Staff Ping channel
+      const staffPingChannel = resolveChannel(guild, config.channels.staffPing, 'Staff Ping Channel');
+      if (staffPingChannel) {
+        logger.info(`[${guild.name}] Staff ping channel active: #${staffPingChannel.name}`);
+      } else {
+        logger.info(`[${guild.name}] Staff ping channel notice: Ensure a channel named "#! · PING" or "#ping" exists for Support Waiting alerts.`);
+      }
     }
 
     logger.success(`Bot is fully ready and monitoring member & invite events.`);
