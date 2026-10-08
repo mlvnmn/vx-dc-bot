@@ -318,7 +318,11 @@ module.exports = {
           });
         }
 
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        try {
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        } catch (err) {
+          if (err.code === 10062 || err.code === 40060) return;
+        }
 
         const amount = interaction.options.getInteger('amount') || 100;
 
