@@ -146,7 +146,7 @@ module.exports = {
       // Handle /setup-logs Slash Command
       // ==========================================
       if (interaction.commandName === 'setup-logs') {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
           return interaction.reply({
             content: '❌ You need Administrator permissions to run this command.',
             flags: MessageFlags.Ephemeral
@@ -265,7 +265,7 @@ module.exports = {
       // Handle /setup-tickets Slash Command
       // ==========================================
       if (interaction.commandName === 'setup-tickets') {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels) && !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageChannels) && !interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
           return interaction.reply({
             content: '❌ You need "Manage Channels" or Administrator permissions to use this command.',
             flags: MessageFlags.Ephemeral
@@ -309,8 +309,8 @@ module.exports = {
       // ==========================================
       if (interaction.commandName === 'clear-chat') {
         if (
-          !interaction.member.permissions.has(PermissionFlagsBits.ManageMessages) &&
-          !interaction.member.permissions.has(PermissionFlagsBits.Administrator)
+          !interaction.memberPermissions?.has(PermissionFlagsBits.ManageMessages) &&
+          !interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)
         ) {
           return interaction.reply({
             content: '❌ You must have "Manage Messages" or Administrator permissions to use this command.',
@@ -348,8 +348,8 @@ module.exports = {
       // ==========================================
       if (interaction.commandName === 'dm') {
         if (
-          !interaction.member.permissions.has(PermissionFlagsBits.ManageMessages) &&
-          !interaction.member.permissions.has(PermissionFlagsBits.Administrator)
+          !interaction.memberPermissions?.has(PermissionFlagsBits.ManageMessages) &&
+          !interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)
         ) {
           return interaction.reply({
             content: '❌ You must have "Manage Messages" or Administrator permissions to use this command.',
@@ -457,8 +457,8 @@ module.exports = {
       // ==========================================
       if (interaction.commandName === 'style-channels') {
         if (
-          !interaction.member.permissions.has(PermissionFlagsBits.ManageChannels) &&
-          !interaction.member.permissions.has(PermissionFlagsBits.Administrator)
+          !interaction.memberPermissions?.has(PermissionFlagsBits.ManageChannels) &&
+          !interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)
         ) {
           return interaction.reply({
             content: '❌ You must have "Manage Channels" or Administrator permissions to use this command.',
@@ -508,7 +508,7 @@ module.exports = {
 
         // Check if caller is authorized owner / allowed user / administrator to execute allow/deny
         const isCallerOwner = isAllowed(guild, interaction.user.id);
-        const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator);
+        const isAdmin = interaction.memberPermissions?.has(PermissionFlagsBits.Administrator);
 
         if (!isCallerOwner && !isAdmin && subcommand !== 'list') {
           return interaction.editReply({
@@ -796,8 +796,8 @@ module.exports = {
       // ==========================================
       if (interaction.commandName === 'status') {
         if (
-          !interaction.member.permissions.has(PermissionFlagsBits.ManageGuild) &&
-          !interaction.member.permissions.has(PermissionFlagsBits.Administrator)
+          !interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) &&
+          !interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)
         ) {
           return interaction.reply({
             content: '❌ You must have "Manage Server" or Administrator permissions to use this command.',
