@@ -2,8 +2,8 @@ require('dotenv').config();
 
 const config = {
   // Authentication credentials
-  token: process.env.TOKEN || process.env.DISCORD_TOKEN || '',
-  clientId: process.env.CLIENT_ID || '',
+  token: (process.env.TOKEN || process.env.DISCORD_TOKEN || '').trim().replace(/^["']|["']$/g, ''),
+  clientId: (process.env.CLIENT_ID || '').trim().replace(/^["']|["']$/g, ''),
 
   // Server Branding
   serverName: process.env.SERVER_NAME || 'VX OFFICIAL',

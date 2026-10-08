@@ -137,18 +137,21 @@ async function connectWithRetry(retries = 5, delay = 5000) {
         logger.error('Please enable BOTH of the following in Discord Developer Portal:');
         logger.error('1. Application -> Bot -> Privileged Gateway Intents -> Server Members Intent (ON)');
         logger.error('2. Application -> Bot -> Privileged Gateway Intents -> Message Content Intent (ON)');
-        process.exit(1);
+        setTimeout(() => process.exit(1), 500);
+        return;
       }
       if (err.message.includes('An invalid token was provided')) {
-        logger.error('CRITICAL: The token in your .env file is invalid. Please check your token.');
-        process.exit(1);
+        logger.error('CRITICAL: The token in your environment is invalid or expired. Please reset your token in Discord Developer Portal and update Render.');
+        setTimeout(() => process.exit(1), 500);
+        return;
       }
       if (attempt < retries) {
         logger.warn(`Discord API may be experiencing temporary server issues (500/network). Retrying in ${delay / 1000}s...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
         logger.error('Exceeded maximum login attempts. Please check Discord status and try again.');
-        process.exit(1);
+        setTimeout(() => process.exit(1), 500);
+        return;
       }
     }
   }
