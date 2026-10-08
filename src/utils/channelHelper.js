@@ -83,19 +83,24 @@ function resolveChannel(guild, channelConfig, purpose = 'Channel') {
   // Validate bot permissions in this channel
   const botMember = guild.members.me;
   if (botMember) {
-    const permissions = channel.permissionsFor(botMember);
-    const requiredPermissions = [
-      PermissionFlagsBits.ViewChannel,
-      PermissionFlagsBits.SendMessages,
-      PermissionFlagsBits.EmbedLinks
-    ];
+    try {
+      const permissions = channel.permissionsFor(botMember);
+      if (permissions) {
+        const requiredPermissions = [
+          PermissionFlagsBits.ViewChannel,
+          PermissionFlagsBits.SendMessages,
+          PermissionFlagsBits.EmbedLinks
+        ];
 
-    const missing = requiredPermissions.filter((perm) => !permissions.has(perm));
-    if (missing.length > 0) {
-      logger.warn(
-        `[${guild.name}] Missing permissions in #${channel.name} (${purpose}): Bot needs View Channel, Send Messages, and Embed Links.`
-      );
-      return null;
+        const missing = requiredPermissions.filter((perm) => !permissions.has(perm));
+        if (missing.length > 0) {
+          logger.warn(
+            `[${guild.name}] Missing permissions in #${channel.name} (${purpose}): Bot needs View Channel, Send Messages, and Embed Links. Ensure bot role has access in private channel settings.`
+          );
+        }
+      }
+    } catch (err) {
+      logger.warn(`[${guild.name}] Error checking permissions in #${channel.name}: ${err.message}`);
     }
   }
 
