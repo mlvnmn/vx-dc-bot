@@ -5,11 +5,11 @@ const { resolveVoiceChannelW, isAllowed } = require('../utils/privateVoiceHelper
 const { isTriggerChannel, createTempVoiceChannel, checkAndDeleteTempChannel } = require('../utils/tempVoiceHelper');
 const { resolveChannel, normalizeChannelName } = require('../utils/channelHelper');
 const { resolveRole } = require('../utils/roleHelper');
-const { formatUserTag } = require('../utils/formatters');
+const { formatUserTag, fromSmallCaps } = require('../utils/formatters');
 
 // Cooldown map to prevent ping spam (guildId:memberId -> timestamp)
 const alertCooldowns = new Map();
-const COOLDOWN_MS = 30000; // 30 seconds cooldown per user
+const COOLDOWN_MS = 5000; // 5 seconds cooldown for responsive testing
 
 /**
  * Helper to check if a voice channel is the Support Waiting room
@@ -17,22 +17,28 @@ const COOLDOWN_MS = 30000; // 30 seconds cooldown per user
  * @returns {boolean}
  */
 function isSupportWaitingChannel(channel) {
-  if (!channel) return false;
+  if (!channel || channel.type !== 2) return false; // 2: GuildVoice
 
   // 1. Check configured ID
   if (config.channels.supportWaiting?.id && channel.id === config.channels.supportWaiting.id) {
     return true;
   }
 
-  const nameLower = channel.name.toLowerCase().trim();
+  const rawName = channel.name ? channel.name.toLowerCase().trim() : '';
+  const asciiName = channel.name ? fromSmallCaps(channel.name).toLowerCase().trim() : '';
   const normName = normalizeChannelName(channel.name);
 
-  // 2. Check configured names
+  // 2. Check configured candidate names
   if (config.channels.supportWaiting?.names) {
     for (const targetName of config.channels.supportWaiting.names) {
       if (!targetName) continue;
       const cleanTarget = targetName.toLowerCase().trim();
-      if (nameLower.includes(cleanTarget) || normName.includes(normalizeChannelName(cleanTarget))) {
+      const normTarget = normalizeChannelName(cleanTarget);
+      if (
+        rawName.includes(cleanTarget) ||
+        asciiName.includes(cleanTarget) ||
+        (normTarget.length > 0 && normName.includes(normTarget))
+      ) {
         return true;
       }
     }
@@ -40,10 +46,12 @@ function isSupportWaitingChannel(channel) {
 
   // 3. Fallback matching keywords
   return (
-    nameLower.includes('support waiting') ||
-    nameLower.includes('support-waiting') ||
-    (nameLower.includes('support') && nameLower.includes('waiting')) ||
-    normName.includes('supportwaiting')
+    rawName.includes('support waiting') ||
+    asciiName.includes('support waiting') ||
+    rawName.includes('support-waiting') ||
+    asciiName.includes('support-waiting') ||
+    normName.includes('supportwaiting') ||
+    (normName.includes('support') && (normName.includes('wait') || normName.includes('waiting')))
   );
 }
 
@@ -63,6 +71,17 @@ module.exports = {
       // 2. Handle member joining or moving into a channel
       if (!newChannel || !member) return;
 
+      const guild = newState.guild || oldState.guild;
+      if (!guild) return;
+
+      // Log voice channel transition for diagnostics
+      const isSupportWaiting = isSupportWaitingChannel(newChannel);
+      if (oldChannel?.id !== newChannel.id) {
+        logger.info(
+          `[${guild.name}] [Voice Event] ${member.user?.tag || member.id} joined VC '${newChannel.name}' (Support Waiting Match: ${isSupportWaiting})`
+        );
+      }
+
       // A. Check if joined channel is a "Create Voice" trigger channel
       if (isTriggerChannel(newChannel)) {
         await createTempVoiceChannel(member, newChannel);
@@ -70,9 +89,6 @@ module.exports = {
       }
 
       // B. Check if joined channel is private voice channel 'w'
-      const guild = newState.guild || oldState.guild;
-      if (!guild) return;
-
       const voiceChannelW = resolveVoiceChannelW(guild);
 
       if (voiceChannelW && newChannel.id === voiceChannelW.id) {
@@ -93,7 +109,7 @@ module.exports = {
       }
 
       // C. Check if member joined a "Support Waiting" voice channel
-      if (oldChannel?.id !== newChannel.id && isSupportWaitingChannel(newChannel)) {
+      if (oldChannel?.id !== newChannel.id && isSupportWaiting) {
         const cooldownKey = `${guild.id}:${member.id}`;
         const lastAlertTime = alertCooldowns.get(cooldownKey) || 0;
         const now = Date.now();
@@ -115,10 +131,11 @@ module.exports = {
             if (c.type !== 0 && c.type !== 5) return false; // 0: GuildText, 5: GuildAnnouncement
             const cName = c.name.toLowerCase();
             const norm = normalizeChannelName(c.name);
+            const parentName = c.parent ? c.parent.name.toLowerCase() : '';
             return (
               cName.includes('ping') ||
               norm.includes('ping') ||
-              (c.parent && c.parent.name.toLowerCase().includes('staff') && (cName.includes('ping') || norm.includes('ping')))
+              (parentName.includes('staff') && (cName.includes('ping') || norm.includes('ping')))
             );
           });
         }
@@ -145,7 +162,8 @@ module.exports = {
             'Support',
             'Developer',
             'Founder',
-            'Core'
+            'Core',
+            'Team Magnera'
           ]) {
             const r = resolveRole(guild, { name: rName });
             if (r && !supportRoles.some((existing) => existing.id === r.id)) {
@@ -176,12 +194,12 @@ module.exports = {
 
           try {
             await pingChannel.send({ content: `🔔 ${pingMention}`, embeds: [alertEmbed] });
-            logger.info(`[${guild.name}] Sent Support Waiting alert for ${member.user?.tag || member.id} in #${pingChannel.name}`);
+            logger.info(`[${guild.name}] ✅ Sent Support Waiting alert for ${member.user?.tag || member.id} in #${pingChannel.name}`);
           } catch (err) {
             logger.error(`Failed to send Support Waiting alert to #${pingChannel.name}: ${err.message}. (Ensure bot has Send Messages & View Channel permissions in #${pingChannel.name})`);
           }
         } else {
-          logger.warn(`[${guild.name}] Could not send Support Waiting alert: Staff ping channel not found.`);
+          logger.warn(`[${guild.name}] Could not send Support Waiting alert: Staff ping channel not found in server.`);
         }
       }
     } catch (err) {
